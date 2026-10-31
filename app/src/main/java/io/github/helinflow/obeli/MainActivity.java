@@ -13,6 +13,8 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
+import android.graphics.drawable.RippleDrawable;
+import android.content.res.ColorStateList;
 import android.widget.*;
 import android.text.InputType;
 import org.json.JSONArray;
@@ -88,11 +90,11 @@ public class MainActivity extends Activity {
         return t;
     }
 
-    private TextView action(String value, int color, int textColor, int radius) {
+    private RippleDrawable ripple(int color, int radius) {\n        return new RippleDrawable(ColorStateList.valueOf(0x33ffffff), shape(color, radius, 0), null);\n    }\n\n    private TextView action(String value, int color, int textColor, int radius) {
         TextView t = label(value, 14, textColor);
         t.setGravity(Gravity.CENTER);
         t.setPadding(dp(16), dp(11), dp(16), dp(11));
-        t.setBackground(shape(color, radius, 0));
+        t.setBackground(ripple(color, radius));
         t.setClickable(true);
         t.setFocusable(true);
         return t;
@@ -252,7 +254,7 @@ public class MainActivity extends Activity {
     private void addSuggestion(LinearLayout parent, String value) {
         TextView chip = label(value, 12, TEXT);
         chip.setPadding(dp(13), dp(12), dp(13), dp(12));
-        chip.setBackground(shape(CARD, 17, 0));
+        chip.setBackground(ripple(CARD, 17));
         LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1, -2);
         p.setMargins(0, dp(4), 0, dp(4));
         parent.addView(chip, p);
