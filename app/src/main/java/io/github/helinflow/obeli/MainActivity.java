@@ -235,8 +235,7 @@ public class MainActivity extends Activity {
         intro.setPadding(dp(4), dp(22), dp(4), dp(10));
         TextView orb = label("✳", 43, PRIMARY);
         intro.addView(orb);
-        welcomeTitle = label("Uma IA que fica
-com você.", 29, TEXT);
+        welcomeTitle = label("Uma IA que fica\\ncom você.", 29, TEXT);
         welcomeTitle.setTypeface(null, Typeface.BOLD);
         welcomeTitle.setLineSpacing(0, 1.05f);
         LinearLayout.LayoutParams tp = new LinearLayout.LayoutParams(-1, -2);
