@@ -3,6 +3,7 @@
 #include <vector>
 #include <mutex>
 #include <algorithm>
+#include <thread>
 #include "llama.h"
 
 static llama_model * g_model=nullptr;
