@@ -355,7 +355,61 @@ public class MainActivity extends Activity {
         }
     }
 
-    private void showModelManagement() {\n        if (modelPath == null || !new File(modelPath).exists()) {\n            status.setText("Nenhum modelo importado para gerenciar.");\n            return;\n        }\n        String name = new File(modelPath).getName();\n        String[] actions = loaded ? new String[]{"Descarregar modelo", "Excluir modelo do aparelho"} : new String[]{"Excluir modelo do aparelho"};\n        new AlertDialog.Builder(this).setTitle(name).setItems(actions, (dialog, which) -> {\n            if (loaded && which == 0) {\n                loadButton.setEnabled(false);\n                status.setText("Descarregando modelo…");\n                worker.execute(() -> {\n                    nativeUnloadModel();\n                    runOnUiThread(() -> {\n                        loaded = false;\n                        loadButton.setEnabled(true);\n                        loadButton.setText("Carregar");\n                        modelStatus.setText("MODELO DISPONÍVEL  •  " + name);\n                        status.setText("Modelo descarregado.");\n                    });\n                });\n            } else {\n                new AlertDialog.Builder(this).setTitle("Excluir modelo?")\n                        .setMessage("O arquivo " + name + " será removido deste aparelho. Essa ação não pode ser desfeita.")\n                        .setNegativeButton("Cancelar", null).setPositiveButton("Excluir", (d, w) -> deleteSelectedModel())\n                        .show();\n            }\n        }).setNegativeButton("Cancelar", null).show();\n    }\n\n    private void deleteSelectedModel() {\n        if (modelPath == null) return;\n        final String oldPath = modelPath;\n        loadButton.setEnabled(false);\n        status.setText("Removendo modelo…");\n        worker.execute(() -> {\n            if (loaded) nativeUnloadModel();\n            boolean deleted = new File(oldPath).delete();\n            runOnUiThread(() -> {\n                loaded = false;\n                if (deleted) {\n                    modelPath = null;\n                    getPreferences(MODE_PRIVATE).edit().remove("model_path").apply();\n                    modelStatus.setText("NENHUM MODELO SELECIONADO");\n                } else {\n                    modelStatus.setText("MODELO DISPONÍVEL  •  " + new File(oldPath).getName());\n                }\n                loadButton.setEnabled(true);\n                loadButton.setText("Carregar");\n                status.setText(deleted ? "Modelo excluído do aparelho." : "Não foi possível excluir o arquivo.");\n            });\n        });\n    }\n\n    private void pickModel() {
+    private void showModelManagement() {
+        if (modelPath == null || !new File(modelPath).exists()) {
+            status.setText("Nenhum modelo importado para gerenciar.");
+            return;
+        }
+        String name = new File(modelPath).getName();
+        String[] actions = loaded ? new String[]{"Descarregar modelo", "Excluir modelo do aparelho"} : new String[]{"Excluir modelo do aparelho"};
+        new AlertDialog.Builder(this).setTitle(name).setItems(actions, (dialog, which) -> {
+            if (loaded && which == 0) {
+                loadButton.setEnabled(false);
+                status.setText("Descarregando modelo…");
+                worker.execute(() -> {
+                    nativeUnloadModel();
+                    runOnUiThread(() -> {
+                        loaded = false;
+                        loadButton.setEnabled(true);
+                        loadButton.setText("Carregar");
+                        modelStatus.setText("MODELO DISPONÍVEL  •  " + name);
+                        status.setText("Modelo descarregado.");
+                    });
+                });
+            } else {
+                new AlertDialog.Builder(this).setTitle("Excluir modelo?")
+                        .setMessage("O arquivo " + name + " será removido deste aparelho. Essa ação não pode ser desfeita.")
+                        .setNegativeButton("Cancelar", null).setPositiveButton("Excluir", (d, w) -> deleteSelectedModel())
+                        .show();
+            }
+        }).setNegativeButton("Cancelar", null).show();
+    }
+
+    private void deleteSelectedModel() {
+        if (modelPath == null) return;
+        final String oldPath = modelPath;
+        loadButton.setEnabled(false);
+        status.setText("Removendo modelo…");
+        worker.execute(() -> {
+            if (loaded) nativeUnloadModel();
+            boolean deleted = new File(oldPath).delete();
+            runOnUiThread(() -> {
+                loaded = false;
+                if (deleted) {
+                    modelPath = null;
+                    getPreferences(MODE_PRIVATE).edit().remove("model_path").apply();
+                    modelStatus.setText("NENHUM MODELO SELECIONADO");
+                } else {
+                    modelStatus.setText("MODELO DISPONÍVEL  •  " + new File(oldPath).getName());
+                }
+                loadButton.setEnabled(true);
+                loadButton.setText("Carregar");
+                status.setText(deleted ? "Modelo excluído do aparelho." : "Não foi possível excluir o arquivo.");
+            });
+        });
+    }
+
+    private void pickModel() {
         Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         i.setType("*/*");
         i.addCategory(Intent.CATEGORY_OPENABLE);
