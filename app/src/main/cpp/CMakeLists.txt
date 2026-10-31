@@ -14,7 +14,6 @@ set(GGML_METAL OFF CACHE BOOL "" FORCE)
 FetchContent_Declare(llama_cpp
     GIT_REPOSITORY https://github.com/ggml-org/llama.cpp.git
     GIT_TAG 79bce0c8812ddfe4716922d061b67edc2ed517e9
-    GIT_SHALLOW TRUE
 )
 FetchContent_MakeAvailable(llama_cpp)
 add_library(obeli SHARED obeli_jni.cpp)
