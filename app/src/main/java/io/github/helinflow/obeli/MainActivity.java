@@ -47,6 +47,7 @@ public class MainActivity extends Activity {
 
     private static native String nativeLoadModel(String path);
     private static native String nativeGenerate(String prompt);
+    private static native void nativeStopGeneration();
     private static native void nativeUnloadModel();
     static { System.loadLibrary("obeli"); }
 
@@ -217,7 +218,7 @@ public class MainActivity extends Activity {
         setContentView(root);
         choose.setOnClickListener(v -> pickModel());
         loadButton.setOnClickListener(v -> loadModel());
-        sendButton.setOnClickListener(v -> sendMessage());
+        sendButton.setOnClickListener(v -> {\n            if (generating) {\n                nativeStopGeneration();\n                status.setText("Interrompendo geração…");\n            } else {\n                sendMessage();\n            }\n        });
         prompt.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEND) {
                 sendMessage();
@@ -409,7 +410,7 @@ public class MainActivity extends Activity {
         });
     }
 
-    private void sendMessage() {
+    private String buildPromptContext() {\n        StringBuilder context = new StringBuilder();\n        int start = Math.max(0, conversation.size() - 12);\n        for (int i = start; i < conversation.size(); i++) {\n            String[] item = conversation.get(i);\n            context.append("Você".equals(item[0]) ? "User: " : "Assistant: ");\n            context.append(item[1]).append('\\n');\n        }\n        return context.toString();\n    }\n\n    private void sendMessage() {
         String value = prompt.getText().toString().trim();
         if (value.isEmpty() || generating) return;
         if (!loaded) {
@@ -421,22 +422,25 @@ public class MainActivity extends Activity {
         conversation.add(new String[]{"Você", value});
         addMessage("Você", value);
         saveConversation();
+        final String context = buildPromptContext();
         generating = true;
-        sendButton.setEnabled(false);
-        sendButton.setAlpha(.55f);
+        sendButton.setText("■");
+        sendButton.setEnabled(true);
+        sendButton.setAlpha(1f);
         status.setText("Gerando resposta local…");
         ((InputMethodManager)getSystemService(Context.INPUT_METHOD_SERVICE))
                 .hideSoftInputFromWindow(prompt.getWindowToken(), 0);
         worker.execute(() -> {
-            String answer = nativeGenerate(value);
+            String answer = nativeGenerate(context);
             runOnUiThread(() -> {
                 conversation.add(new String[]{"Obeli", answer});
                 addMessage("Obeli", answer);
                 saveConversation();
                 generating = false;
+                sendButton.setText("↑");
                 sendButton.setEnabled(true);
                 sendButton.setAlpha(1f);
-                status.setText("Resposta gerada no dispositivo.");
+                status.setText(answer.startsWith("Geração interrompida") ? "Geração interrompida." : "Resposta gerada no dispositivo.");
             });
         });
     }
