@@ -1,27 +1,21 @@
 <resources>
-	<style name="AppTheme" parent="@android:style/Theme.Material.Light.DarkActionBar">
-		<item name="android:colorPrimary">@color/colorPrimary</item>
-		<item name="android:colorPrimaryDark">@color/colorPrimaryDark</item>
-		<item name="android:colorAccent">@color/colorAccent</item>
-		<item name="android:colorControlHighlight">@color/colorControlHighlight</item>
-		<item name="android:colorControlNormal">@color/colorControlNormal</item>
-	</style>
-	<style name="FullScreen" parent="@android:style/Theme.Material.Light.NoActionBar.Fullscreen">
-		<item name="android:colorPrimary">@color/colorPrimary</item>
-		<item name="android:colorPrimaryDark">@color/colorPrimaryDark</item>
-		<item name="android:colorAccent">@color/colorAccent</item>
-		<item name="android:colorControlHighlight">@color/colorControlHighlight</item>
-		<item name="android:colorControlNormal">@color/colorControlNormal</item>
-	</style>
-	<style name="NoActionBar" parent="@android:style/Theme.Material.Light.NoActionBar">
-		<item name="android:colorPrimary">@color/colorPrimary</item>
-		<item name="android:colorPrimaryDark">@color/colorPrimaryDark</item>
-		<item name="android:colorAccent">@color/colorAccent</item>
-		<item name="android:colorControlHighlight">@color/colorControlHighlight</item>
-		<item name="android:colorControlNormal">@color/colorControlNormal</item>
-	</style>
-	<style name="NoStatusBar" parent="AppTheme">
-		<item name="android:windowFullscreen">true</item>
-	</style>
-	<style name="AppTheme.DebugActivity" parent="AppTheme" />
+    <style name="AppTheme" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="android:fontFamily">sans</item>
+        <item name="android:colorAccent">@color/md_primary</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:statusBarColor">@color/md_background</item>
+        <item name="android:navigationBarColor">@color/md_background</item>
+        <item name="android:windowLightNavigationBar">false</item>
+        <item name="android:windowBackground">@color/md_background</item>
+        <item name="android:windowActionModeOverlay">true</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+    <style name="NoActionBar" parent="AppTheme" />
+    <style name="FullScreen" parent="AppTheme">
+        <item name="android:windowFullscreen">true</item>
+    </style>
+    <style name="NoStatusBar" parent="AppTheme">
+        <item name="android:windowFullscreen">true</item>
+    </style>
+    <style name="AppTheme.DebugActivity" parent="AppTheme" />
 </resources>
