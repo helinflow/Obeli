@@ -218,7 +218,14 @@ public class MainActivity extends Activity {
         setContentView(root);
         choose.setOnClickListener(v -> pickModel());
         loadButton.setOnClickListener(v -> loadModel());
-        sendButton.setOnClickListener(v -> {\n            if (generating) {\n                nativeStopGeneration();\n                status.setText("Interrompendo geração…");\n            } else {\n                sendMessage();\n            }\n        });
+        sendButton.setOnClickListener(v -> {
+            if (generating) {
+                nativeStopGeneration();
+                status.setText("Interrompendo geração…");
+            } else {
+                sendMessage();
+            }
+        });
         prompt.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == android.view.inputmethod.EditorInfo.IME_ACTION_SEND) {
                 sendMessage();
@@ -410,7 +417,18 @@ public class MainActivity extends Activity {
         });
     }
 
-    private String buildPromptContext() {\n        StringBuilder context = new StringBuilder();\n        int start = Math.max(0, conversation.size() - 12);\n        for (int i = start; i < conversation.size(); i++) {\n            String[] item = conversation.get(i);\n            context.append("Você".equals(item[0]) ? "User: " : "Assistant: ");\n            context.append(item[1]).append('\\n');\n        }\n        return context.toString();\n    }\n\n    private void sendMessage() {
+    private String buildPromptContext() {
+        StringBuilder context = new StringBuilder();
+        int start = Math.max(0, conversation.size() - 12);
+        for (int i = start; i < conversation.size(); i++) {
+            String[] item = conversation.get(i);
+            context.append("Você".equals(item[0]) ? "User: " : "Assistant: ");
+            context.append(item[1]).append('\n');
+        }
+        return context.toString();
+    }
+
+    private void sendMessage() {
         String value = prompt.getText().toString().trim();
         if (value.isEmpty() || generating) return;
         if (!loaded) {
