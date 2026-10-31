@@ -90,7 +90,11 @@ public class MainActivity extends Activity {
         return t;
     }
 
-    private RippleDrawable ripple(int color, int radius) {\n        return new RippleDrawable(ColorStateList.valueOf(0x33ffffff), shape(color, radius, 0), null);\n    }\n\n    private TextView action(String value, int color, int textColor, int radius) {
+    private RippleDrawable ripple(int color, int radius) {
+        return new RippleDrawable(ColorStateList.valueOf(0x33ffffff), shape(color, radius, 0), null);
+    }
+
+    private TextView action(String value, int color, int textColor, int radius) {
         TextView t = label(value, 14, textColor);
         t.setGravity(Gravity.CENTER);
         t.setPadding(dp(16), dp(11), dp(16), dp(11));
@@ -230,7 +234,8 @@ public class MainActivity extends Activity {
         intro.setPadding(dp(4), dp(22), dp(4), dp(10));
         TextView orb = label("✳", 43, PRIMARY);
         intro.addView(orb);
-        welcomeTitle = label("Uma IA que fica\ncom você.", 29, TEXT);
+        welcomeTitle = label("Uma IA que fica
+com você.", 29, TEXT);
         welcomeTitle.setTypeface(null, Typeface.BOLD);
         welcomeTitle.setLineSpacing(0, 1.05f);
         LinearLayout.LayoutParams tp = new LinearLayout.LayoutParams(-1, -2);
