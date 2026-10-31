@@ -11,6 +11,9 @@ static llama_model * g_model = nullptr;
 static llama_context * g_ctx = nullptr;
 static std::mutex g_mutex;
 static std::atomic<bool> g_stop_requested(false);
+static std::atomic<int> g_max_tokens(256);
+static std::atomic<float> g_temperature(0.7f);
+static std::atomic<int> g_threads(4);
 
 extern "C" JNIEXPORT jstring JNICALL
 Java_io_github_helinflow_obeli_MainActivity_nativeLoadModel(JNIEnv * env, jclass, jstring jpath) {
@@ -34,7 +37,8 @@ Java_io_github_helinflow_obeli_MainActivity_nativeLoadModel(JNIEnv * env, jclass
     cp.n_batch = 128;
     cp.n_ubatch = 128;
     const unsigned int cores = std::thread::hardware_concurrency();
-    cp.n_threads = static_cast<int32_t>(std::min(4u, std::max(2u, cores)));
+    const int requested_threads = std::max(2, std::min(4, g_threads.load()));
+    cp.n_threads = static_cast<int32_t>(std::min(requested_threads, static_cast<int>(std::max(2u, cores))));
     cp.n_threads_batch = cp.n_threads;
 
     g_ctx = llama_init_from_model(g_model, cp);
@@ -91,12 +95,12 @@ Java_io_github_helinflow_obeli_MainActivity_nativeGenerate(JNIEnv * env, jclass,
     if (!sampler) return env->NewStringUTF("Não foi possível inicializar a geração.");
     llama_sampler_chain_add(sampler, llama_sampler_init_top_k(40));
     llama_sampler_chain_add(sampler, llama_sampler_init_top_p(0.9f, 1));
-    llama_sampler_chain_add(sampler, llama_sampler_init_temp(0.7f));
+    llama_sampler_chain_add(sampler, llama_sampler_init_temp(g_temperature.load()));
     llama_sampler_chain_add(sampler, llama_sampler_init_dist(LLAMA_DEFAULT_SEED));
 
     std::string output;
     char piece[512];
-    for (int i = 0; i < 256 && !g_stop_requested.load(); i++) {
+    for (int i = 0; i < g_max_tokens.load() && !g_stop_requested.load(); i++) {
         llama_token id = llama_sampler_sample(sampler, g_ctx, -1);
         llama_sampler_accept(sampler, id);
         if (llama_vocab_is_eog(vocab, id)) break;
@@ -108,6 +112,15 @@ Java_io_github_helinflow_obeli_MainActivity_nativeGenerate(JNIEnv * env, jclass,
 
     if (g_stop_requested.load() && output.empty()) return env->NewStringUTF("Geração interrompida.");
     return env->NewStringUTF(output.empty() ? "O modelo não gerou texto." : output.c_str());
+}
+
+
+extern "C" JNIEXPORT void JNICALL
+Java_io_github_helinflow_obeli_MainActivity_nativeSetGenerationParams(
+        JNIEnv *, jclass, jint max_tokens, jfloat temperature, jint threads) {
+    g_max_tokens.store(std::max(64, std::min(512, static_cast<int>(max_tokens))));
+    g_temperature.store(std::max(0.1f, std::min(1.5f, static_cast<float>(temperature))));
+    g_threads.store(std::max(2, std::min(4, static_cast<int>(threads))));
 }
 
 extern "C" JNIEXPORT void JNICALL
