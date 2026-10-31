@@ -190,6 +190,7 @@ public class MainActivity extends Activity {
         prompt.setBackgroundColor(Color.TRANSPARENT);
         prompt.setPadding(dp(5), dp(5), dp(5), dp(8));
         prompt.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
+        prompt.setImeOptions(android.view.inputmethod.EditorInfo.IME_ACTION_SEND | android.view.inputmethod.EditorInfo.IME_FLAG_NO_EXTRACT_UI);
         composer.addView(prompt, new LinearLayout.LayoutParams(-1, -2));
         LinearLayout controls = new LinearLayout(this);
         controls.setGravity(Gravity.CENTER_VERTICAL);
