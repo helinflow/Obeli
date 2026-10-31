@@ -1,6 +1,7 @@
 package io.github.helinflow.obeli;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.os.Bundle;
 import android.content.Intent;
 import android.net.Uri;
@@ -49,6 +50,7 @@ public class MainActivity extends Activity {
     private static native String nativeGenerate(String prompt);
     private static native void nativeStopGeneration();
     private static native void nativeUnloadModel();
+    private static native void nativeSetGenerationParams(int maxTokens, float temperature, int threads);
     static { System.loadLibrary("obeli"); }
 
     @Override public void onCreate(Bundle state) {
@@ -59,6 +61,7 @@ public class MainActivity extends Activity {
         buildUi();
         restoreConversation();
         modelPath = getPreferences(MODE_PRIVATE).getString("model_path", null);
+        applyGenerationSettings();
         if (modelPath != null && new File(modelPath).exists()) {
             modelStatus.setText("MODELO DISPONÍVEL  •  " + new File(modelPath).getName());
             status.setText("Pronto para carregar. Seus arquivos ficam no aparelho.");
@@ -126,8 +129,13 @@ public class MainActivity extends Activity {
         subtitle.setLetterSpacing(.12f);
         brand.addView(subtitle);
         top.addView(brand, new LinearLayout.LayoutParams(0, -2, 1));
+        TextView settings = action("⚙", HIGH, TEXT, 24);
+        top.addView(settings);
         TextView newChat = action("+  Novo", HIGH, TEXT, 24);
-        top.addView(newChat);
+        LinearLayout.LayoutParams ncp = new LinearLayout.LayoutParams(-2, -2);
+        ncp.setMargins(dp(6), 0, 0, 0);
+        top.addView(newChat, ncp);
+        settings.setOnClickListener(v -> showGenerationSettings());
         newChat.setOnClickListener(v -> newConversation());
         root.addView(top);
 
@@ -394,6 +402,80 @@ public class MainActivity extends Activity {
             }
         } catch (Exception ignored) { }
         return name;
+    }
+
+
+    private void applyGenerationSettings() {
+        android.content.SharedPreferences prefs = getPreferences(MODE_PRIVATE);
+        nativeSetGenerationParams(prefs.getInt("max_tokens", 256),
+                prefs.getFloat("temperature", 0.7f), prefs.getInt("threads", 4));
+    }
+
+    private void showGenerationSettings() {
+        if (generating) {
+            status.setText("Espere a geração terminar para alterar as configurações.");
+            return;
+        }
+        android.content.SharedPreferences prefs = getPreferences(MODE_PRIVATE);
+        LinearLayout panel = new LinearLayout(this);
+        panel.setOrientation(LinearLayout.VERTICAL);
+        panel.setPadding(dp(20), dp(8), dp(20), dp(4));
+
+        TextView tokenLabel = label("Limite de saída: " + prefs.getInt("max_tokens", 256) + " tokens", 14, TEXT);
+        panel.addView(tokenLabel);
+        SeekBar tokenBar = new SeekBar(this);
+        tokenBar.setMax(448);
+        tokenBar.setProgress(prefs.getInt("max_tokens", 256) - 64);
+        panel.addView(tokenBar);
+        tokenBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            public void onProgressChanged(SeekBar bar, int progress, boolean fromUser) {
+                tokenLabel.setText("Limite de saída: " + (progress + 64) + " tokens");
+            }
+            public void onStartTrackingTouch(SeekBar bar) { }
+            public void onStopTrackingTouch(SeekBar bar) { }
+        });
+
+        TextView tempLabel = label("Temperatura: " + String.format(java.util.Locale.US, "%.1f", prefs.getFloat("temperature", 0.7f)), 14, TEXT);
+        LinearLayout.LayoutParams tlp = new LinearLayout.LayoutParams(-1, -2);
+        tlp.setMargins(0, dp(16), 0, 0);
+        panel.addView(tempLabel, tlp);
+        SeekBar tempBar = new SeekBar(this);
+        tempBar.setMax(14);
+        tempBar.setProgress(Math.round((prefs.getFloat("temperature", 0.7f) - 0.1f) * 10));
+        panel.addView(tempBar);
+        tempBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            public void onProgressChanged(SeekBar bar, int progress, boolean fromUser) {
+                tempLabel.setText("Temperatura: " + String.format(java.util.Locale.US, "%.1f", (progress + 1) / 10f));
+            }
+            public void onStartTrackingTouch(SeekBar bar) { }
+            public void onStopTrackingTouch(SeekBar bar) { }
+        });
+
+        TextView threadLabel = label("Threads de CPU: " + prefs.getInt("threads", 4) + " (aplicado ao recarregar)", 14, TEXT);
+        LinearLayout.LayoutParams thlp = new LinearLayout.LayoutParams(-1, -2);
+        thlp.setMargins(0, dp(16), 0, 0);
+        panel.addView(threadLabel, thlp);
+        SeekBar threadBar = new SeekBar(this);
+        threadBar.setMax(2);
+        threadBar.setProgress(prefs.getInt("threads", 4) - 2);
+        panel.addView(threadBar);
+        threadBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
+            public void onProgressChanged(SeekBar bar, int progress, boolean fromUser) {
+                threadLabel.setText("Threads de CPU: " + (progress + 2) + " (aplicado ao recarregar)");
+            }
+            public void onStartTrackingTouch(SeekBar bar) { }
+            public void onStopTrackingTouch(SeekBar bar) { }
+        });
+
+        new AlertDialog.Builder(this).setTitle("Configurações do motor")
+                .setView(panel).setNegativeButton("Cancelar", null)
+                .setPositiveButton("Salvar", (dialog, which) -> {
+                    prefs.edit().putInt("max_tokens", tokenBar.getProgress() + 64)
+                            .putFloat("temperature", (tempBar.getProgress() + 1) / 10f)
+                            .putInt("threads", threadBar.getProgress() + 2).apply();
+                    applyGenerationSettings();
+                    status.setText("Configurações salvas.");
+                }).show();
     }
 
     private void loadModel() {
