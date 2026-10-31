@@ -409,6 +409,21 @@ public class MainActivity extends Activity {
         });
     }
 
+    private File uniqueModelFile(File dir, String originalName) {
+        String safeName = originalName.replaceAll("[^a-zA-Z0-9._-]", "_");
+        File candidate = new File(dir, safeName);
+        if (!candidate.exists()) return candidate;
+
+        int dot = safeName.toLowerCase().lastIndexOf(".gguf");
+        String stem = dot > 0 ? safeName.substring(0, dot) : safeName;
+        String extension = dot > 0 ? safeName.substring(dot) : ".gguf";
+        int suffix = 2;
+        do {
+            candidate = new File(dir, stem + " (" + suffix++ + ")" + extension);
+        } while (candidate.exists());
+        return candidate;
+    }
+
     private void pickModel() {
         Intent i = new Intent(Intent.ACTION_OPEN_DOCUMENT);
         i.setType("*/*");
@@ -428,7 +443,7 @@ public class MainActivity extends Activity {
                 if (!name.toLowerCase().endsWith(".gguf")) throw new IOException("Selecione um arquivo com extensão .gguf.");
                 File dir = new File(getFilesDir(), "models");
                 if (!dir.exists() && !dir.mkdirs()) throw new IOException("Não foi possível criar a pasta de modelos.");
-                File target = new File(dir, name.replaceAll("[^a-zA-Z0-9._-]", "_"));
+                File target = uniqueModelFile(dir, name);
                 try (InputStream in = getContentResolver().openInputStream(uri);
                      OutputStream out = new FileOutputStream(target)) {
                     if (in == null) throw new IOException("Não foi possível abrir o arquivo.");
